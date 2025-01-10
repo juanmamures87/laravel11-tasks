@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Livewire\TaskComponent;
 use Illuminate\Support\Facades\Route;
 
 //Route::view('/', 'welcome');
