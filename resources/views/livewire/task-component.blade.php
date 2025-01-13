@@ -31,7 +31,7 @@
                             class="text-white bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:focus:ring-yellow-900">
                             Editar
                         </button>
-                        <button type="button"
+                        <button wire:click.prevent="deleteTask({{ $task->id }})" type="button"
                             class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
                             Eliminar
                         </button>
@@ -49,13 +49,13 @@
                     <div class="m-8 my-20 max-w-[400px] mx-auto">
                         <div class="mb-8">
                             <h1 class="mb-4 text-3xl font-extrabold">Crear nueva tarea</h1>
-                            <form class="my-8 w-80 max-w-screen-lg sm:w-96">
+                            <form wire:submit.prevent="createTask" class="my-8 w-80 max-w-screen-lg sm:w-96">
                                 <div class="mb-1 flex flex-col gap-6">
                                     <div class="w-full max-w-sm min-w-[200px]">
                                         <label for="title" class="block mb-2 text-sm text-slate-600">
                                             Título
                                         </label>
-                                        <input wire:model="title" id="title" name="title" type="text"
+                                        <input wire:model.defer="title" id="title" name="title" type="text"
                                             class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
                                             placeholder="Título de tu tarea" required />
                                     </div>
@@ -63,18 +63,20 @@
                                         <label for="description" class="block mb-2 text-sm text-slate-600">
                                             Email
                                         </label>
-                                        <textarea wire:model="description" id="description" name="description" cols="10" rows="5"
+                                        <textarea wire:model.defer="description" id="description" name="description" cols="10" rows="5"
                                             class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
                                             placeholder="Descripción de la tarea" required></textarea>
                                     </div>
+                                    <div class="flex justify-between space-x-4">
+                                        <button type="submit"
+                                            class="p-3 bg-blue-400 rounded-full text-white w-full font-semibold">Crear
+                                            tarea</button>
+                                        <button wire:click.prevent="closeCreateModal"
+                                            class="p-3 bg-red-200 border rounded-full w-full font-semibold">Cancelar</button>
+                                    </div>
                             </form>
                         </div>
-                        <div wire:click.prevent="createTask" class="flex justify-between space-x-4">
-                            <button class="p-3 bg-blue-400 rounded-full text-white w-full font-semibold">Crear
-                                tarea</button>
-                            <button wire:click.prevent="closeCreateModal"
-                                class="p-3 bg-red-200 border rounded-full w-full font-semibold">Cancelar</button>
-                        </div>
+
                     </div>
                 </div>
             </div>
