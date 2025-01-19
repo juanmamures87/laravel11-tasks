@@ -12,6 +12,10 @@ class TaskComponent extends Component
     public $title;
     public $description;
     public $modal = false;
+    public $isUpdating = false; // Determina si estás en modo edición
+    public $updatingTaskId = null; // ID de la tarea que se está actualizando
+    public $showConfirmationModal = false; // Mostrar modal de confirmación para eliminar tarea
+    public $taskToDelete = null; // ID de la tarea que se va a eliminarF
 
     protected $fields = [ // arreglo para los campos que deben ser limpiados
         'title' => '',
@@ -37,6 +41,8 @@ class TaskComponent extends Component
     {
         $this->title = $this->fields['title'];
         $this->description = $this->fields['description'];
+        $this->updatingTaskId = null; // Limpiar el ID de la tarea actual
+        $this->isUpdating = false;
     }
 
     public function openCreateModal()
@@ -63,9 +69,66 @@ class TaskComponent extends Component
         $newTask->description = $this->description; //Datos del campo description
         $newTask->user_id = Auth::id();
         $newTask->save();
+
         $this->tasks[] = $newTask; // Agrega la nueva tarea al arreglo existente
         $this->clearFields(); //Limpiar campos
         $this->modal = false;
+    }
+
+    public function openUpdateModal($taskId)
+    {
+        $task = Task::find($taskId);
+
+        if ($task && $task->user_id === Auth::id()) {
+            $this->title = $task->title;
+            $this->description = $task->description;
+            $this->updatingTaskId = $task->id; // Guardar el ID de la tarea en edición
+            $this->isUpdating = true; // Cambiar a modo edición
+            $this->modal = true;
+        } else {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No tienes permiso para editar esta tarea.',
+            ]);
+        }
+    }
+
+    public function updateTask()
+    {
+        if (!$this->updatingTaskId) {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No se pudo encontrar la tarea para actualizar.',
+            ]);
+            return;
+        }
+
+        $this->validate([
+            'title' => 'required',
+            'description' => 'required',
+        ]);
+
+        $task = Task::find($this->updatingTaskId);
+
+        if ($task && $task->user_id === Auth::id()) {
+            $task->title = $this->title;
+            $task->description = $this->description;
+            $task->save();
+
+            $this->tasks = $this->getTaskForUser(); // Refrescar la lista de tareas
+            $this->clearFields();
+            $this->modal = false;
+
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => 'Tarea actualizada correctamente.',
+            ]);
+        } else {
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No tienes permiso para actualizar esta tarea.',
+            ]);
+        }
     }
 
     public function deleteTask($taskId)
@@ -74,11 +137,35 @@ class TaskComponent extends Component
         $task = Task::find($taskId);
 
         if ($task && $task->user_id === Auth::id()) {
-            $task->delete();  // Elimina la tarea
-            $this->tasks = $this->getTaskForUser();  // Refrescar la lista de tareas
-            session()->flash('success', 'Tarea eliminada correctamente.');
+
+            // Mostrar el modal de confirmación
+            $this->taskToDelete = $task;
+            $this->showConfirmationModal = true;
         } else {
-            session()->flash('error', 'No tienes permiso para eliminar esta tarea.');
+
+            $this->dispatch('alert', [
+                'type' => 'error',
+                'message' => 'No tienes permiso para eliminar esta tarea.',
+            ]);
         }
+    }
+
+    public function confirmDeleteTask()
+    {
+        if ($this->taskToDelete) {
+            $this->taskToDelete->delete();  // Elimina la tarea
+            $this->tasks = $this->getTaskForUser();  // Refrescar la lista de tareas
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'message' => 'Tarea eliminada correctamente.',
+            ]);
+            $this->showConfirmationModal = false;  // Cerrar el modal
+        }
+    }
+
+    public function cancelDeleteTask()
+    {
+        $this->showConfirmationModal = false;  // Cerrar el modal sin hacer nada
+        $this->taskToDelete = null;  // Limpiar la tarea almacenada para eliminar
     }
 }
